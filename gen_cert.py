@@ -14,9 +14,12 @@ from os.path import exists, join
 CERT_FILE = "myapp.crt"
 KEY_FILE = "myapp.key"
 
-def create_self_signed_cert(cert_dir):
+def create_self_signed_cert(cert_dir, container_type="pem", keysize=4096, passphrase=None):
     '''
-    if datacard.crt and datacard.key don't exsist, create them
+    * create keypair
+    * sha512 faster than sha256 on 64bit machines
+    * only RSA and DSA are supported
+    
     '''
     
     if not exists(join(cert_dir, CERT_FILE))\
@@ -24,7 +27,7 @@ def create_self_signed_cert(cert_dir):
             
         #create a key pair
         k = crypto.PKey()
-        k.generate_key(crypto.TYPE_RSA, 4096)
+        k.generate_key(crypto.TYPE_RSA, keysize)
         
         # create self-signed cert
         cert = crypto.X509()
@@ -39,13 +42,32 @@ def create_self_signed_cert(cert_dir):
         cert.gmtime_adj_notAfter(10*365*24*60*60)
         cert.set_issuer(cert.get_subject())
         cert.set_pubkey(k)
-        cert.sign(k, 'sha1')
+        cert.sign(k, 'sha512')
         
-        open(join(cert_dir, CERT_FILE), "wt").write(
-                crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-        open(join(cert_dir, KEY_FILE), "wt").write(
-                crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+        if container_type == "pem":
+            ''' TO PEM '''
+            crt = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
+            key = crypto.dump_privatekey(crypto.FILETYPE_PEM, k)
+            pem = crt + key
+            open("keypair.pem", "wb").write(pem) 
+            #open(join(cert_dir, CERT_FILE), "wb").write(crt)
+            #open(join(cert_dir, KEY_FILE), "wb").write(key)
+
+        elif container_type == "p12":        
+            ''' TO P12 '''
+            p12 = crypto.PKCS12()
+            p12.set_certificate(cert)
+            p12.set_privatekey(k)
+            if passphrase != None:
+                open(str(gethostname()) + ".p12", "wb").write(
+                        p12.export(passphrase=passphrase))
+            else:
+                open(str(gethostname()) + ".p12", "wb").write(
+                        p12.export())
+                        
+        return
 
                 
 if __name__ == "__main__":
-    create_self_signed_cert(".")
+    create_self_signed_cert(".", container_type="p12")
+    print "Done!"
