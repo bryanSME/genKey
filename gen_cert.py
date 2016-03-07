@@ -69,5 +69,10 @@ def create_self_signed_cert(cert_dir, container_type="pem", keysize=4096, passph
 
                 
 if __name__ == "__main__":
-    create_self_signed_cert(".", container_type="p12")
+    
+    pw = raw_input("enter your new cert password and press enter (leave blank for no password):")
+    if pw == "":
+        pw = None
+    create_self_signed_cert(".", container_type="p12", passphrase=pw)
+    
     print "Done!"
