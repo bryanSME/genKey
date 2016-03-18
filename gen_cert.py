@@ -32,8 +32,8 @@ def create_self_signed_cert(cert_dir, container_type="pem", keysize=4096, passph
         # create self-signed cert
         cert = crypto.X509()
         cert.get_subject().C = "US"
-        cert.get_subject().ST = "VIRGINIA"
-        cert.get_subject().L = "VIRGINIA"
+        cert.get_subject().ST = "ALIBAMA"
+        cert.get_subject().L = "ALIBAMA"
         cert.get_subject().O = "test company"
         cert.get_subject().OU = "uptime"
         cert.get_subject().CN = gethostname()
